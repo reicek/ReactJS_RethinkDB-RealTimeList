@@ -1,5 +1,5 @@
 "use strict"
-var SimpleList = React.createClass({
+var SimpleList = React.createClass({displayName: "SimpleList",
 	getInitialState: function() {
         return {
 			simpleList: [
@@ -26,33 +26,33 @@ var SimpleList = React.createClass({
 	},
 	render: function() {
 		return (
-			<span>
-				<p><strong>Pasos para dominar un nuevo lenguaje de programación:</strong></p>
-				<SimpleListRow simpleList={this.state.simpleList}/>
-			</span>
+			React.createElement("span", null, 
+				React.createElement("p", null, React.createElement("strong", null, "Pasos para dominar un nuevo lenguaje de programación:")), 
+				React.createElement(SimpleListRow, {simpleList: this.state.simpleList})
+			)
 		);
 	}	
 });
 
-var SimpleListRow = React.createClass({
+var SimpleListRow = React.createClass({displayName: "SimpleListRow",
 	render: function() {
 		console.log('_________________');
 		console.log('simpleList rows data:');
 		console.log(this.props);
 		var rows = this.props.simpleList;
 		return (
-			<ol>
-				{rows.map(function(element) {
+			React.createElement("ol", null, 
+				rows.map(function(element) {
 					return (
-						<li>{element.message}</li>
+						React.createElement("li", null, element.message)
 					);
-				})}
-			</ol>
+				})
+			)
 		);
 	}	
 });
 
 React.render(
-	<SimpleList />,
+	React.createElement(SimpleList, null),
 	document.getElementById('simpleList')
 )
