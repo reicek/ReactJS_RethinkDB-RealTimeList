@@ -1,5 +1,5 @@
-"use strict";
-var SimpleList = React.createClass({
+"use strict"
+var SimpleList = React.createClass({displayName: "SimpleList",
 	getInitialState: function() {
         return {
 			simpleList: [
@@ -20,44 +20,39 @@ var SimpleList = React.createClass({
 				this.setState({simpleList: data});
 			}.bind(this),
 				error: function(xhr, status, err) {
-					console.log('_________________');
-					console.log('Data error:');
 					console.error(this.props.url, status, err.toString())
 			}.bind(this)
 		});
-		websocket 			= new WebSocket('/api/feed'); 
-		websocket.onopen 	= function(evt) { onOpen(evt) }; 
-		websocket.onclose 	= function(evt) { onClose(evt) };
 	},
 	render: function() {
 		return (
-			<span>
-				<p><strong>Pasos para dominar un nuevo lenguaje de programación:</strong></p>
-				<SimpleListRow simpleList={this.state.simpleList}/>
-			</span>
+			React.createElement("span", null, 
+				React.createElement("p", null, React.createElement("strong", null, "Pasos para dominar un nuevo lenguaje de programación:")), 
+				React.createElement(SimpleListRow, {simpleList: this.state.simpleList})
+			)
 		);
 	}	
 });
 
-var SimpleListRow = React.createClass({
+var SimpleListRow = React.createClass({displayName: "SimpleListRow",
 	render: function() {
 		console.log('_________________');
 		console.log('simpleList rows data:');
 		console.log(this.props);
 		var rows = this.props.simpleList;
 		return (
-			<ol>
-				{rows.map(function(element) {
+			React.createElement("ol", null, 
+				rows.map(function(element) {
 					return (
-						<li>{element.message}</li>
+						React.createElement("li", null, element.message)
 					);
-				})}
-			</ol>
+				})
+			)
 		);
 	}	
 });
 
 React.render(
-	<SimpleList />,
+	React.createElement(SimpleList, null),
 	document.getElementById('simpleList')
 )

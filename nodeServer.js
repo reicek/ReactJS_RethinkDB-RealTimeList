@@ -85,7 +85,7 @@ r.connect(config.rethinkdb)
 	})
 	.error(function(error){
 		console.log("Could not open a connection to initialize the database "+config.rethinkdb.db);
-		console.log(err.message);
+		console.log(error.message);
 		process.exit(1);
 	});
 
@@ -105,7 +105,7 @@ var handleError			= function(res) {
 
 
 // ------------------------------------------
-//		Retrieve all elements
+//		List all elements
 // ------------------------------------------
 
 var list				= function(request, res, next) {
@@ -118,7 +118,27 @@ var list				= function(request, res, next) {
 				.then( function(data) {
 					var query = data._responses[0].r;
 					res.send(query);
-					console.log('Done.');
+					console.log('Data sent.');
+					console.log('_____________________');
+				})
+				.error(handleError(res))
+		});
+}
+
+// ------------------------------------------
+//		Live Feed
+// ------------------------------------------
+
+var feed				= function(request, res, next) {
+	console.log('_____________________');
+	console.log('API - list/feed');
+	
+	r.connect(config.rethinkdb)
+		.then(function(conn) {
+			r.table(table).orderBy({index: "createdAt"}).changes(squash=0.2).run(conn)
+				.then( function(data) {
+					var query = data._responses[0].r;
+					console.log('Broadcasting changes.');
 					console.log('_____________________');
 				})
 				.error(handleError(res))
@@ -140,7 +160,7 @@ var add					= function(request, res, next) {
 		.then(function(conn) {
 			r.table(table).insert(element).run(conn)
 				.then( function() {
-					console.log('Done.');
+					console.log('New data added.');
 					console.log('_____________________');
 				})
 				.error(handleError(res))
@@ -160,7 +180,7 @@ var	empty				= function (request, res, next) {
 			r.table(table).delete({returnChanges: true}).run(conn)
 				.then( function(changes) {
 					console.log(changes);
-					console.log('Done.');
+					console.log('All data erased.');
 					console.log('_____________________');
 				})
 				.error(handleError(res))
@@ -181,5 +201,6 @@ app.use(multer());
 app.route('/api/list').get(list);
 app.route('/api/add').put(add);
 app.route('/api/empty').post(empty);
+app.route('/api/feed').post(feed);
 // Static files server
 app.use(serveStatic('./public'));
