@@ -1,5 +1,22 @@
-"use strict"
-var SimpleList = React.createClass({displayName: "SimpleList",
+"use strict";
+
+var startSocket	= function() {
+	var socket = io(window.location.hostname);
+	socket.on('test', function (data) {
+		console.log('_________________');
+		console.log("testing")
+		console.log(data);
+		console.log('_________________');
+	});
+	socket.on('change', function (data) {
+		console.log('_________________');
+		console.log("testing")
+		console.log(data);
+		console.log('_________________');
+	});
+}
+
+var SimpleList	= React.createClass({displayName: "SimpleList",
 	getInitialState: function() {
         return {
 			simpleList: [
@@ -10,12 +27,13 @@ var SimpleList = React.createClass({displayName: "SimpleList",
         };
     },
 	componentDidMount: function() {
+		startSocket();
 		$.ajax({
 			url: '/api/list',
 			dataType: 'json',
 			success: function(data) {
 				console.log('_________________');
-				console.log('Data recieved:');
+				console.log('Simple List data recieved:');
 				console.log(data);
 				this.setState({simpleList: data});
 			}.bind(this),

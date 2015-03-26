@@ -1,5 +1,22 @@
 "use strict";
-var SimpleList = React.createClass({
+
+var startSocket	= function() {
+	var socket = io(window.location.hostname);
+	socket.on('test', function (data) {
+		console.log('_________________');
+		console.log("testing")
+		console.log(data);
+		console.log('_________________');
+	});
+	socket.on('change', function (data) {
+		console.log('_________________');
+		console.log("testing")
+		console.log(data);
+		console.log('_________________');
+	});
+}
+
+var SimpleList	= React.createClass({
 	getInitialState: function() {
         return {
 			simpleList: [
@@ -10,6 +27,7 @@ var SimpleList = React.createClass({
         };
     },
 	componentDidMount: function() {
+		startSocket();
 		$.ajax({
 			url: '/api/list',
 			dataType: 'json',
@@ -25,9 +43,6 @@ var SimpleList = React.createClass({
 					console.error(this.props.url, status, err.toString())
 			}.bind(this)
 		});
-		websocket 			= new WebSocket('/api/feed'); 
-		websocket.onopen 	= function(evt) { onOpen(evt) }; 
-		websocket.onclose 	= function(evt) { onClose(evt) };
 	},
 	render: function() {
 		return (

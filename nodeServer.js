@@ -16,8 +16,6 @@ var config				= require('./config.json');
 //		Install NodeJS Dependencies
 // ******************************************
 
-// Express
-var express				= require('express');
 // Serve-Static 
 var serveStatic			= require('serve-static');
 // Body-Parser
@@ -26,7 +24,14 @@ var bodyParser			= require('body-parser');
 var multer				= require('multer')
 // RethinkDB
 var r					= require('rethinkdb');
-
+// Express
+var express				= require('express');
+var app					= express();
+// Socket Server
+var server				= require('http').Server(app);
+// Socket.IO
+var io					= require('socket.io')(server);
+var webSocket			= null;
 // ******************************************
 //		Initialize
 // ******************************************
@@ -34,20 +39,22 @@ var r					= require('rethinkdb');
 var table				= 'list';
 var tableIndex			= 'createdAt';
 
-var startExpress		= function() {
-    app.listen(config.express.port);
+var startServer		= function() {
+    server.listen(config.express.port);
 	console.log('_____________________');
-	console.log('HTTP and API server online')
+	console.log('HTTP service online');
+	console.log('Web Socket service online');
+	console.log('API service online');
     console.log('Listening on port '+config.express.port);
 	console.log('_____________________');
 }
 
-var initialize 			= function(conn) {
+var initializeRTDB		= function(conn) {
 	r.table(table).indexWait('createdAt').run(conn)
 		.then(function(result) {
 			console.log("DB OK, starting express...");
 			console.log('_____________________');
-			startExpress();
+			startServer();
 		})
 		.error(function(error){
 			console.log("The table doesn't exist.");
@@ -59,7 +66,7 @@ var initialize 			= function(conn) {
 						.finally(function(){
 							console.log("DB Initialized, starting express...");
 							console.log('_____________________');
-							startExpress();
+							startServer();
 						});
 				});
 		});	
@@ -68,18 +75,18 @@ var initialize 			= function(conn) {
 r.connect(config.rethinkdb)
 	.then(function(conn) {
 		console.log('_____________________');
-		console.log("Conection stablished");
+		console.log("Connected to RethinkDB");
 		console.log("Checking DB...");
 		r.dbList().run(conn)
 			.then(function(dbList){
 				if (dbList.indexOf(config.rethinkdb.db) > -1)
 				{
-					initialize(conn);
+					initializeRTDB(conn);
 				} else {
 					console.log("The DB doesn't exist.");
 					console.log("Initializing DB "+config.rethinkdb.db);
 					r.dbCreate(config.rethinkdb.db).run(conn)
-						.then(initialize(conn))
+						.then(initializeRTDB(conn))
 				}
 			})
 	})
@@ -119,26 +126,6 @@ var list				= function(request, res, next) {
 					var query = data._responses[0].r;
 					res.send(query);
 					console.log('Data sent.');
-					console.log('_____________________');
-				})
-				.error(handleError(res))
-		});
-}
-
-// ------------------------------------------
-//		Live Feed
-// ------------------------------------------
-
-var feed				= function(request, res, next) {
-	console.log('_____________________');
-	console.log('API - list/feed');
-	
-	r.connect(config.rethinkdb)
-		.then(function(conn) {
-			r.table(table).orderBy({index: "createdAt"}).changes(squash=0.2).run(conn)
-				.then( function(data) {
-					var query = data._responses[0].r;
-					console.log('Broadcasting changes.');
 					console.log('_____________________');
 				})
 				.error(handleError(res))
@@ -188,11 +175,9 @@ var	empty				= function (request, res, next) {
 }
 
 // ******************************************
-//		Basic Express Setup
+//		Express Setup
 // ******************************************
 
-// Create the application
-var app					= express();
 // Data parsing
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -201,6 +186,19 @@ app.use(multer());
 app.route('/api/list').get(list);
 app.route('/api/add').put(add);
 app.route('/api/empty').post(empty);
-app.route('/api/feed').post(feed);
 // Static files server
 app.use(serveStatic('./public'));
+
+
+io.on('connection', function (socket) {
+	// Sisten to test conection
+	webSocket	= socket;
+	webSocket.emit('test', { test: 'Web Socket OK' });
+	r.connect(config.rethinkdb)
+		.then(function(conn) {
+			r.table(table).changes(squash=0.2).run(conn, function(err,cursor){
+				cursor.each(webSocket.emit('change', { change: this}));
+			});
+		});
+});
+
