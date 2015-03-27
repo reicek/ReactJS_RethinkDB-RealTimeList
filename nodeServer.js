@@ -199,7 +199,7 @@ io.on('connection', function (socket) {
 	webSocket.emit('test', { result: 'Web Socket OK' }); // Listen to test conection
 	r.connect(config.rethinkdb)
 		.then(function(conn) {
-			r.table(table).changes().run(conn, function(error,feed){
+			r.table(table).changes({squash:1}).run(conn, function(error,feed){
 				feed.on("data",function(change){
 					webSocket.emit('change',{change:change});
 				});
