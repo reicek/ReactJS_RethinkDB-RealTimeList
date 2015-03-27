@@ -7,37 +7,6 @@ var startSocket	= function() {
 }
 
 var SimpleFilterableList	= React.createClass({displayName: "SimpleFilterableList",
-	getInitialState: function() {
-        return {
-			userInput: ""
-        };
-    },
-	updateUserInput: function(input){
-		console.log('_________________');
-		console.log('User search input:');
-		console.log(input.target.value);
-		this.setState({userInput: input.target.value});
-	},
-	render: function(){
-		return (
-			React.createElement("div", null, 
-				React.createElement("input", {type: "text", placeholder: "Filtrar...", onChange: this.updateUserInput}), 
-				React.createElement(SimpleList, {url: this.props.url, userInput: this.state.userInput})
-			)
-		);
-	}
-});
-
-var SimpleList = React.createClass({displayName: "SimpleList",
-	getInitialState: function() {
-        return {
-			simpleList: [
-				{
-					row: 'cargando	...'
-				}
-			]
-        };
-    },
 	componentDidMount: function() {
 		startSocket();
 		var instance = this;
@@ -78,11 +47,79 @@ var SimpleList = React.createClass({displayName: "SimpleList",
 			});
 		});
 	},
+	getInitialState: function() {
+        return {
+			userInput: "",
+			simpleList: [
+				{
+					row: 'cargando	...'
+				}
+			]
+        };
+    },
+	updateUserInput: function(input){
+		console.log('_________________');
+		console.log('User search input:');
+		console.log(input.target.value);
+		this.setState({userInput: input.target.value});
+	},
+	favToInput: function(){
+		console.log('_________________');
+		console.log('Convertig fav to input');
+		document.getElementById("newElement").className 	= '';
+		document.getElementById("newElement").placeholder	= 'Agregar nuevo paso...';
+	},
+	sendNewElement: function(key){
+		if (key.key == "Enter"){
+			console.log('_________________');
+			console.log('Sending new element:');
+			console.log(document.getElementById('newElement').value);
+			console.log('_________________');
+			console.log('Convertig input to fav');
+			$.ajax({
+				url: "/api/add",
+				type: "put",
+				data: {"row":document.getElementById('newElement').value}
+			});
+			document.getElementById('newElement').value 		= '';
+			document.getElementById("newElement").className		= 'fav';
+			document.getElementById("newElement").placeholder	= "+";
+			document.getElementById("userInput").focus();
+		};
+	},
+	render: function(){
+		return (
+			React.createElement("div", null, 
+				React.createElement("input", {
+					id: "userInput", 
+					type: "text", 	
+					placeholder: "Filtrar...", 	
+					onChange: this.updateUserInput}
+				), 
+				React.createElement(SimpleList, {	
+					simpleList: this.state.simpleList, 
+					userInput: this.state.userInput}), 
+				React.createElement("input", {
+					id: "newElement", 
+					type: "text", 	
+					placeholder: "+", 			
+					onKeyPress: this.sendNewElement, 	
+					onClick: this.favToInput, 
+					className: "fav"}
+				)
+			)
+		);
+	}
+});
+
+var SimpleList = React.createClass({displayName: "SimpleList",
 	render: function() {
 		return (
 			React.createElement("span", null, 
 				React.createElement("p", null, React.createElement("strong", null, "Pasos para dominar un nuevo lenguaje de programación:")), 
-				React.createElement(SimpleListRow, {simpleList: this.state.simpleList, userInput: this.props.userInput})
+				React.createElement(SimpleListRow, {
+					simpleList: this.props.simpleList, 
+					userInput: this.props.userInput})
 			)
 		);
 	}	
@@ -114,6 +151,6 @@ var SimpleListRow = React.createClass({displayName: "SimpleListRow",
 });
 
 React.render(
-	React.createElement(SimpleFilterableList, {url: "simpleList_data.json"}),
+	React.createElement(SimpleFilterableList, null),
 	document.getElementById('simpleList')
 )
