@@ -31,7 +31,6 @@ var app					= express();
 var server				= require('http').Server(app);
 // Socket.IO
 var io					= require('socket.io')(server);
-var webSocket			= null;
 // ******************************************
 //		Initialize
 // ******************************************
@@ -191,14 +190,18 @@ app.use(serveStatic('./public'));
 
 
 io.on('connection', function (socket) {
-	// Sisten to test conection
-	webSocket	= socket;
-	webSocket.emit('test', { test: 'Web Socket OK' });
+	this.socket		= socket;
+	var webSocket	= this.socket;
+	webSocket.emit('test', { result: 'Web Socket OK' }); // Sisten to test conection
 	r.connect(config.rethinkdb)
 		.then(function(conn) {
-			r.table(table).changes(squash=0.2).run(conn, function(err,cursor){
-				cursor.each(webSocket.emit('change', { change: this}));
+			r.table(table).changes().run(conn, function(error,feed){
+				feed.on("data",function(change){
+					webSocket.emit('change',{change:change});
+				});
+				feed.on("error",function(error){
+					webSocket.emit('error',{error:error});
+				});
 			});
 		});
 });
-

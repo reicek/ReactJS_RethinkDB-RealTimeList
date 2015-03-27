@@ -1,19 +1,9 @@
 "use strict";
 
+var socket		= null;
+
 var startSocket	= function() {
-	var socket = io(window.location.hostname);
-	socket.on('test', function (data) {
-		console.log('_________________');
-		console.log("testing")
-		console.log(data);
-		console.log('_________________');
-	});
-	socket.on('change', function (data) {
-		console.log('_________________');
-		console.log("testing")
-		console.log(data);
-		console.log('_________________');
-	});
+	socket = io(window.location.hostname);
 }
 
 var SimpleList	= React.createClass({displayName: "SimpleList",
@@ -28,6 +18,7 @@ var SimpleList	= React.createClass({displayName: "SimpleList",
     },
 	componentDidMount: function() {
 		startSocket();
+		var instance = this;
 		$.ajax({
 			url: '/api/list',
 			dataType: 'json',
@@ -35,13 +26,34 @@ var SimpleList	= React.createClass({displayName: "SimpleList",
 				console.log('_________________');
 				console.log('Simple List data recieved:');
 				console.log(data);
-				this.setState({simpleList: data});
-			}.bind(this),
+				instance.setState({simpleList: data});
+			}.bind(instance),
 				error: function(xhr, status, err) {
 					console.log('_________________');
 					console.log('Data error:');
-					console.error(this.props.url, status, err.toString())
-			}.bind(this)
+					console.error(instance.props.url, status, err.toString())
+			}.bind(instance)
+		});
+		socket.on('change', function (data) {
+			console.log('_________________');
+			console.log("Change")
+			console.log(data);
+			console.log('_________________');
+			$.ajax({
+				url: '/api/list',
+				dataType: 'json',
+				success: function(data) {
+					console.log('_________________');
+					console.log('Simple List data recieved:');
+					console.log(data);
+					instance.setState({simpleList: data});
+				}.bind(instance),
+					error: function(xhr, status, err) {
+						console.log('_________________');
+						console.log('Data error:');
+						console.error(instance.props.url, status, err.toString())
+				}.bind(instance)
+			});
 		});
 	},
 	render: function() {
