@@ -1,5 +1,5 @@
 /**
- * nodeServer.js - NodeJS Restful API for RethinkDB
+ * nodeServer.js - NodeJS Restful API for RethinkDB & Real Time Web Sockets
  * 2015, by Cesar Anton Dorantes @reicek
  * for https://platzi.com/
  * This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. 
@@ -31,8 +31,9 @@ var app					= express();
 var server				= require('http').Server(app);
 // Socket.IO
 var io					= require('socket.io')(server);
+
 // ******************************************
-//		Initialize
+//		RethinkDB
 // ******************************************
 
 var table				= 'list';
@@ -174,7 +175,7 @@ var	empty				= function (request, res, next) {
 }
 
 // ******************************************
-//		Express Setup
+//		Express
 // ******************************************
 
 // Data parsing
@@ -189,10 +190,13 @@ app.route('/api/empty').post(empty);
 app.use(serveStatic('./public'));
 
 
+// ******************************************
+//		Socket.IO
+// ******************************************
 io.on('connection', function (socket) {
 	this.socket		= socket;
 	var webSocket	= this.socket;
-	webSocket.emit('test', { result: 'Web Socket OK' }); // Sisten to test conection
+	webSocket.emit('test', { result: 'Web Socket OK' }); // Listen to test conection
 	r.connect(config.rethinkdb)
 		.then(function(conn) {
 			r.table(table).changes().run(conn, function(error,feed){
