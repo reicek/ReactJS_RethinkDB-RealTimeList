@@ -35,26 +35,29 @@ var io					= require('socket.io')(server);
 // ******************************************
 //		RethinkDB
 // ******************************************
-
-var table				= 'list';
-var tableIndex			= 'createdAt';
-
 var startServer		= function() {
     server.listen(config.express.port);
 	console.log('_____________________');
 	console.log('HTTP service online');
 	console.log('Web Socket service online');
 	console.log('API service online');
-    console.log('Listening on port '+config.express.port);
 	console.log('_____________________');
 }
 
+var table				= 'list';
+var tableIndex			= 'createdAt';
 var initializeRTDB		= function(conn) {
 	r.table(table).indexWait('createdAt').run(conn)
 		.then(function(result) {
 			console.log("DB OK, starting express...");
 			console.log('_____________________');
 			startServer();
+			conn.close()
+				.then(function(){
+					console.log('_____________________');
+					console.log("Closed RethinkDB test connection")
+					console.log('_____________________');
+				});
 		})
 		.error(function(error){
 			console.log("The table doesn't exist.");
@@ -66,6 +69,12 @@ var initializeRTDB		= function(conn) {
 						.finally(function(){
 							console.log("DB Initialized, starting express...");
 							console.log('_____________________');
+							conn.close()
+								.then(function(){
+									console.log('_____________________');
+									console.log("Closed RethinkDB test connection")
+									console.log('_____________________');
+								});
 							startServer();
 						});
 				});
@@ -107,6 +116,7 @@ r.connect(config.rethinkdb)
 var handleError			= function(res) {
     return function(error){
 		res.send(500,{error: error.message});
+		conn.close();
 	}
 }
 
@@ -123,10 +133,16 @@ var list				= function(request, res, next) {
 		.then(function(conn) {
 			r.table(table).orderBy({index: "createdAt"}).run(conn)
 				.then( function(data) {
-					var query = data._responses[0].r;
-					res.send(query);
-					console.log('Data sent.');
-					console.log('_____________________');
+					if (data._responses[0]){
+						var query = data._responses[0].r;
+						res.send(query);
+					}
+					conn.close()
+						.then(function(){
+							console.log('Data sent.');
+							console.log(new Date());
+							console.log('_____________________');
+						});
 				})
 				.error(handleError(res))
 		});
@@ -147,8 +163,12 @@ var add					= function(request, res, next) {
 		.then(function(conn) {
 			r.table(table).insert(element).run(conn)
 				.then( function() {
-					console.log('New data added.');
-					console.log('_____________________');
+					conn.close()
+						.then(function(){
+							console.log('New data added.');
+							console.log(new Date());
+							console.log('_____________________');
+						});
 				})
 				.error(handleError(res))
 		});
@@ -167,8 +187,12 @@ var	empty				= function (request, res, next) {
 			r.table(table).delete({returnChanges: true}).run(conn)
 				.then( function(changes) {
 					console.log(changes);
-					console.log('All data erased.');
-					console.log('_____________________');
+					conn.close()
+						.then(function(){
+							console.log('All data erased.');
+							console.log(new Date());
+							console.log('_____________________');
+						});
 				})
 				.error(handleError(res))
 		});
@@ -184,7 +208,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(multer());
 // Define main routes
 app.route('/api/list').get(list);
-app.route('/api/add').put(add);
+app.route('/api/add').post(add);
 app.route('/api/empty').post(empty);
 // Static files server
 app.use(serveStatic('./public'));
@@ -199,12 +223,13 @@ io.on('connection', function (socket) {
 	webSocket.emit('test', { result: 'Web Socket OK' }); // Listen to test conection
 	r.connect(config.rethinkdb)
 		.then(function(conn) {
-			r.table(table).changes({squash:1}).run(conn, function(error,feed){
-				feed.on("data",function(change){
+			r.table(table).changes({squash:1}).run(conn, function(error,cursor){
+				cursor.on("data",function(change){
 					webSocket.emit('change',{change:change});
 				});
-				feed.on("error",function(error){
+				cursor.on("error",function(error){
 					webSocket.emit('error',{error:error});
+					cursor.close();
 				});
 			});
 		});

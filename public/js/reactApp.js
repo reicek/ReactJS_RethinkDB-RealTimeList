@@ -1,9 +1,9 @@
 "use strict"
 
-var socket		= null;
+var socket					= null;
 
-var startSocket	= function() {
-	socket = io(window.location.hostname);
+var startSocket				= function() {
+	socket	= io(window.location.hostname);
 }
 
 var SimpleFilterableList	= React.createClass({displayName: "SimpleFilterableList",
@@ -74,11 +74,11 @@ var SimpleFilterableList	= React.createClass({displayName: "SimpleFilterableList
 			console.log('_________________');
 			console.log('Sending new element:');
 			console.log(document.getElementById('newElement').value);
-			console.log('_________________');
 			console.log('Convertig input to fav');
+			console.log('_________________');
 			$.ajax({
 				url: "/api/add",
-				type: "put",
+				type: "post",
 				data: {"row":document.getElementById('newElement').value}
 			});
 			document.getElementById('newElement').value 		= '';
@@ -112,7 +112,7 @@ var SimpleFilterableList	= React.createClass({displayName: "SimpleFilterableList
 	}
 });
 
-var SimpleList = React.createClass({displayName: "SimpleList",
+var SimpleList			 	= React.createClass({displayName: "SimpleList",
 	render: function() {
 		return (
 			React.createElement("span", null, 
@@ -125,7 +125,7 @@ var SimpleList = React.createClass({displayName: "SimpleList",
 	}	
 });
 
-var SimpleListRow = React.createClass({displayName: "SimpleListRow",
+var SimpleListRow			= React.createClass({displayName: "SimpleListRow",
 	render: function() {
 		console.log('_________________');
 		console.log('simpleList rows props:');
