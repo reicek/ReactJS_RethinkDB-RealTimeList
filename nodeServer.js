@@ -44,10 +44,8 @@ var startServer		= function() {
 	console.log('_____________________');
 }
 
-var table				= 'list';
-var tableIndex			= 'createdAt';
 var initializeRTDB		= function(conn) {
-	r.table(table).indexWait('createdAt').run(conn)
+	r.table(config.rethinkdb).indexWait('createdAt').run(conn)
 		.then(function(result) {
 			console.log("DB OK, starting express...");
 			console.log('_____________________');
@@ -55,24 +53,24 @@ var initializeRTDB		= function(conn) {
 			conn.close()
 				.then(function(){
 					console.log('_____________________');
-					console.log("Closed RethinkDB test connection")
+					console.log("Closed RethinkDB connection")
 					console.log('_____________________');
 				});
 		})
 		.error(function(error){
 			console.log("The table doesn't exist.");
-			console.log("Initializing table: "+table);
-			r.tableCreate(table).run(conn)
+			console.log("Initializing table: "+config.rethinkdb.table);
+			r.tableCreate(config.rethinkdb.table).run(conn)
 				.finally(function(){
-					console.log("Initializing index: "+tableIndex);
-					r.table(table).indexCreate(tableIndex).run(conn)
+					console.log("Initializing index: "+config.rethinkdb.tableIndex);
+					r.table(config.rethinkdb.table).indexCreate(config.rethinkdb.tableIndex).run(conn)
 						.finally(function(){
 							console.log("DB Initialized, starting express...");
 							console.log('_____________________');
 							conn.close()
 								.then(function(){
 									console.log('_____________________');
-									console.log("Closed RethinkDB test connection")
+									console.log("Closed RethinkDB connection")
 									console.log('_____________________');
 								});
 							startServer();
@@ -129,9 +127,9 @@ var list				= function(request, res, next) {
 	console.log('_____________________');
 	console.log('API - list/list');
 	
-	r.connect(config.rethinkdb)
+	r.connect(config.rethinkdb.table)
 		.then(function(conn) {
-			r.table(table).orderBy({index: "createdAt"}).run(conn)
+			r.table(config.rethinkdb.table).orderBy({index: config.rethinkdb.tableIndex}).run(conn)
 				.then( function(data) {
 					if (data._responses[0]){
 						var query = data._responses[0].r;
@@ -161,7 +159,7 @@ var add					= function(request, res, next) {
 	
 	r.connect(config.rethinkdb)
 		.then(function(conn) {
-			r.table(table).insert(element).run(conn)
+			r.table(config.rethinkdb.table).insert(element).run(conn)
 				.then( function() {
 					conn.close()
 						.then(function(){
@@ -184,7 +182,7 @@ var	empty				= function (request, res, next) {
 	
 	r.connect(config.rethinkdb)
 		.then(function(conn) {
-			r.table(table).delete({returnChanges: true}).run(conn)
+			r.table(config.rethinkdb.table).delete({returnChanges: true}).run(conn)
 				.then( function(changes) {
 					console.log(changes);
 					conn.close()
@@ -197,6 +195,27 @@ var	empty				= function (request, res, next) {
 				.error(handleError(res))
 		});
 }
+
+// ******************************************
+//		Socket.IO
+// ******************************************
+io.on('connection', function (socket) {
+	this.socket		= socket;
+	var webSocket	= this.socket;
+	webSocket.emit('checkConnection', { result: 'Web Socket OK' }); // Listen to test conection
+	r.connect(config.rethinkdb)
+		.then(function(conn) {
+			r.table(config.rethinkdb.table).changes({squash:1}).run(conn, function(error,cursor){
+				cursor.on("data",function(change){
+					webSocket.emit('change',{change:change});
+				});
+				cursor.on("error",function(error){
+					webSocket.emit('error',{error:error});
+					cursor.close();
+				});
+			});
+		});
+});
 
 // ******************************************
 //		Express
@@ -213,24 +232,3 @@ app.route('/api/empty').post(empty);
 // Static files server
 app.use(serveStatic('./public'));
 
-
-// ******************************************
-//		Socket.IO
-// ******************************************
-io.on('connection', function (socket) {
-	this.socket		= socket;
-	var webSocket	= this.socket;
-	webSocket.emit('test', { result: 'Web Socket OK' }); // Listen to test conection
-	r.connect(config.rethinkdb)
-		.then(function(conn) {
-			r.table(table).changes({squash:1}).run(conn, function(error,cursor){
-				cursor.on("data",function(change){
-					webSocket.emit('change',{change:change});
-				});
-				cursor.on("error",function(error){
-					webSocket.emit('error',{error:error});
-					cursor.close();
-				});
-			});
-		});
-});

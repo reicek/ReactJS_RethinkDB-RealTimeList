@@ -3,7 +3,9 @@
 		"host": "192.168.1.5",
 		"port": 28015,
 		"authKey": "",
-		"db": "test"
+		"db": "test",
+		"table":"list",
+		"tableIndex":"createdAt"
 	},
 	"express": {
 		"port": 80
