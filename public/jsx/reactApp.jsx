@@ -9,27 +9,8 @@ var startSocket				= function() {
 var SimpleFilterableList	= React.createClass({
 	componentDidMount: function() {
 		startSocket();
-		var instance = this;
-		$.ajax({
-			url: '/api/list',
-			dataType: 'json',
-			success: function(data) {
-				console.log('_________________');
-				console.log('Simple List data recieved:');
-				console.log(data);
-				instance.setState({simpleList: data});
-			}.bind(instance),
-				error: function(xhr, status, err) {
-					console.log('_________________');
-					console.log('Data error:');
-					console.error(instance.props.url, status, err.toString())
-			}.bind(instance)
-		});
-		socket.on('change', function (data) {
-			console.log('_________________');
-			console.log("Change")
-			console.log(data);
-			console.log('_________________');
+		var instance     = this;
+		var downloadData = function(){
 			$.ajax({
 				url: '/api/list',
 				dataType: 'json',
@@ -45,6 +26,14 @@ var SimpleFilterableList	= React.createClass({
 						console.error(instance.props.url, status, err.toString())
 				}.bind(instance)
 			});
+		};
+		downloadData();
+		socket.on('change', function (data) {
+			console.log('_________________');
+			console.log("Change")
+			console.log(data);
+			console.log('_________________');
+			downloadData();
 		});
 	},
 	getInitialState: function() {
