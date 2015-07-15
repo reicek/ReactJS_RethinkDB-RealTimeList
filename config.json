@@ -1,6 +1,6 @@
 {
 	"rethinkdb": {
-		"host": "192.168.1.79",
+		"host": "192.168.1.77",
 		"port": 28015,
 		"authKey": "",
 		"db": "test",
