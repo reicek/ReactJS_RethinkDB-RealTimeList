@@ -12,11 +12,11 @@
   },
   "homepage": "https://platzi.com/blog/rethinkdb-reactjs/",
   "dependencies": {
-    "serve-static": "*",
     "body-parser": "*",
-    "multer": "*",
     "express": "*",
+    "multer": "^1.2.0",
     "rethinkdb": "*",
+    "serve-static": "*",
     "socket.io": "*"
   }
 }
