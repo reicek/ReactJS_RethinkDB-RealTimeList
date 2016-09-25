@@ -5,13 +5,17 @@
  * This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. 
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/.
  **/
+
 // ******************************************
 //          Import configurations
 // ******************************************
+
    var config           = require('./config.json');
+
 // ******************************************
 //       Install NodeJS Dependencies
 // ******************************************
+
 // Serve-Static 
 var serveStatic         = require('serve-static');
 // Body-Parser
@@ -34,16 +38,19 @@ var startServer         = function() {
    console.log('HTTP service online');
    console.log('Web Socket service online');
    console.log('API service online');
+   console.log('_____________________');
 };
 var initializeRTDB      = function(conn) {
    r.table(config.rethinkdb.table).indexWait('createdAt').run(conn)
    .then(function(result) {
       console.log("DB OK, starting express...");
+      console.log('_____________________');
       startServer();
       conn.close()
       .then(function(){
          console.log('_____________________');
          console.log("Closed RethinkDB connection")
+         console.log('_____________________');
       });
    })
    .error(function(error){
@@ -56,10 +63,12 @@ var initializeRTDB      = function(conn) {
          r.table(config.rethinkdb.table).indexCreate(config.rethinkdb.tableIndex).run(conn)
          .finally(function(){
             console.log("DB Initialized, starting express...");
+            console.log('_____________________');
             conn.close()
             .then(function(){
                console.log('_____________________');
                console.log("Closed RethinkDB connection")
+               console.log('_____________________');
             });
             startServer();
          });
@@ -98,7 +107,6 @@ r.connect(config.rethinkdb)
 var handleError         = function(res) {
    return function(error){
       res.send(500,{error: error.message});
-      conn.close();
    }
 }
 // ------------------------------------------
@@ -120,6 +128,7 @@ var list                = function(request, res, next) {
          .then(function(){
             console.log('Data sent.');
             console.log(new Date());
+            console.log('_____________________');
          });
       })
       .error(handleError(res))
@@ -143,6 +152,8 @@ var add                 = function(request, res, next) {
          .then(function(){
             console.log('New data added.');
             console.log(new Date());
+            console.log('_____________________');
+            res.send('200 OK');
          });
       })
       .error(handleError(res))
@@ -164,6 +175,7 @@ var empty               = function (request, res, next) {
          .then(function(){
             console.log('All data erased.');
             console.log(new Date());
+            console.log('_____________________');
          });
       })
       .error(handleError(res))

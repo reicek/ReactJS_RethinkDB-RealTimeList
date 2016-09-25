@@ -3,27 +3,28 @@ var socket                 = null;
 var startSocket            = function() {
    socket   = io(window.location.hostname);
 }
+var instance               = this;
+var downloadData           = function(){
+   $.ajax({
+      url      : '/api/list',
+      dataType : 'json',
+      success  : function(data) {
+         console.log('_________________');
+         console.log('Simple List data recieved:');
+         console.log(data);
+         instance.setState({simpleList: data});
+      }.bind(instance),
+      error: function(xhr, status, err) {
+         console.log('_________________');
+         console.log('Data error:');
+         console.error(instance.props.url, status, err.toString())
+      }.bind(instance)
+   });
+};
 var SimpleFilterableList   = React.createClass({displayName: "SimpleFilterableList",
    componentDidMount : function() {
       startSocket();
-      var instance     = this;
-      var downloadData = function(){
-         $.ajax({
-            url      : '/api/list',
-            dataType : 'json',
-            success  : function(data) {
-               console.log('_________________');
-               console.log('Simple List data recieved:');
-               console.log(data);
-               instance.setState({simpleList: data});
-            }.bind(instance),
-            error: function(xhr, status, err) {
-               console.log('_________________');
-               console.log('Data error:');
-               console.error(instance.props.url, status, err.toString())
-            }.bind(instance)
-         });
-      };
+      instance = this;
       downloadData();
       socket.on('change', function (data) {
          console.log('_________________');
