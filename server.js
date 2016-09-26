@@ -1,21 +1,29 @@
 /**
  * nodeServer.js - NodeJS Restful API for RethinkDB & Real Time Web Sockets
- * 2015, by Cesar Anton Dorantes @reicek
- * for https://platzi.com/blog
- * This work is licensed under the Creative Commons Attribution-ShareAlike 4.0 International License. 
- * To view a copy of this license, visit http://creativecommons.org/licenses/by-sa/4.0/.
+ * Original work Copyright (c) 2015 Cesar Anton Dorantes @reicek, for Platzi.com/blog
+ * Modified work Copyright (c) 2016 Cesar Anton Dorantes @reicek
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software 
+ * and associated documentation files (the "Software"), to deal in the Software without restriction, 
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+ * subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or substantial 
+ * portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE 
+ * AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  **/
-
 // ******************************************
 //          Import configurations
 // ******************************************
-
    var config           = require('./config.json');
-
 // ******************************************
 //       Install NodeJS Dependencies
 // ******************************************
-
 // Serve-Static 
 var serveStatic         = require('serve-static');
 // Body-Parser
@@ -38,19 +46,15 @@ var startServer         = function() {
    console.log('HTTP service online');
    console.log('Web Socket service online');
    console.log('API service online');
-   console.log('_____________________');
 };
 var initializeRTDB      = function(conn) {
    r.table(config.rethinkdb.table).indexWait('createdAt').run(conn)
    .then(function(result) {
       console.log("DB OK, starting express...");
-      console.log('_____________________');
       startServer();
       conn.close()
       .then(function(){
-         console.log('_____________________');
          console.log("Closed RethinkDB connection")
-         console.log('_____________________');
       });
    })
    .error(function(error){
@@ -63,12 +67,9 @@ var initializeRTDB      = function(conn) {
          r.table(config.rethinkdb.table).indexCreate(config.rethinkdb.tableIndex).run(conn)
          .finally(function(){
             console.log("DB Initialized, starting express...");
-            console.log('_____________________');
             conn.close()
             .then(function(){
-               console.log('_____________________');
                console.log("Closed RethinkDB connection")
-               console.log('_____________________');
             });
             startServer();
          });
@@ -112,7 +113,6 @@ var handleError         = function(res) {
 // ------------------------------------------
 //             List all elements
 // ------------------------------------------
-
 var list                = function(request, res, next) {
    console.log('_____________________');
    console.log('API - list/list');
@@ -128,13 +128,11 @@ var list                = function(request, res, next) {
          .then(function(){
             console.log('Data sent.');
             console.log(new Date());
-            console.log('_____________________');
          });
       })
       .error(handleError(res))
    });
 }
-
 // ------------------------------------------
 //             Insert an element
 // ------------------------------------------
@@ -152,7 +150,6 @@ var add                 = function(request, res, next) {
          .then(function(){
             console.log('New data added.');
             console.log(new Date());
-            console.log('_____________________');
             res.send('200 OK');
          });
       })
@@ -175,7 +172,6 @@ var empty               = function (request, res, next) {
          .then(function(){
             console.log('All data erased.');
             console.log(new Date());
-            console.log('_____________________');
          });
       })
       .error(handleError(res))
@@ -204,7 +200,6 @@ io.on('connection', function (socket) {
 // ******************************************
 //                Express
 // ******************************************
-
 // Data parsing
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
